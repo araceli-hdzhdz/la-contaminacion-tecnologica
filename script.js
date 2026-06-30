@@ -692,7 +692,6 @@ function getExtraSurveyDistributions(rows) {
 }
 
 function renderSurveyStats(answers) {
-  const totalResponses = document.querySelector("#survey-total-responses");
   const dataElement = document.querySelector("#sample-data");
   const meanElement = document.querySelector("#mean-result");
   const medianElement = document.querySelector("#median-result");
@@ -732,7 +731,6 @@ function renderSurveyStats(answers) {
   modeElement.textContent = modeLabels.join(", ");
   rangeElement.textContent = Number(stats.range.toFixed(2)).toString();
   countElement.textContent = stats.count.toString();
-  totalResponses.textContent = stats.count.toString();
   interpretationElement.textContent = `Interpretación: se analizaron ${stats.count} respuestas. La media es ${stats.mean.toFixed(
     2
   )}, lo que indica el promedio aproximado de dispositivos electrónicos sin uso reportados por las personas encuestadas.`;
