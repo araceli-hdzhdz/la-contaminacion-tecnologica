@@ -5,7 +5,7 @@ const backToTop = document.querySelector(".back-to-top");
 const sections = document.querySelectorAll("section[id]");
 const modalOpenButtons = document.querySelectorAll("[data-modal-open]");
 const modalCloseButtons = document.querySelectorAll("[data-modal-close]");
-const surveyCsvUrl = "public/data/encuesta-residuos-electronicos.csv";
+const surveyCsvUrl = "https://raw.githubusercontent.com/araceli-hdzhdz/la-contaminacion-tecnologica/refs/heads/main/public/data/encuesta-residuos-electronicos.csv";
 const fallbackSurveyAnswers = [
   { label: "1-2", value: 1.5 },
   { label: "1-2", value: 1.5 },
@@ -135,43 +135,134 @@ const extraSurveyChartConfigs = [
     title: "Modalidad educativa",
     keywords: ["modalidad educativa"],
     labels: {
-      "Educación básica (primaria o secundaria)": "Educación básica",
-    },
+      "Educación básica (primaria o secundaria)":
+        "Educación básica"
+    }
   },
+
   {
     title: "Teléfonos celulares que han tenido",
-    keywords: ["teléfonos celulares"],
+    keywords: [
+      "telefonos celulares",
+      "telefonos",
+      "celulares"
+    ]
   },
+
   {
     title: "Dispositivos recargables en casa",
-    keywords: ["dispositivos electrónicos recargables"],
+    keywords: [
+      "dispositivos electronicos recargables",
+      "recargables",
+      "actualmente en casa"
+    ],
     labels: {
-      "10 o Mas": "10 o más",
-    },
+      "10 o Mas": "10 o más"
+    }
   },
+
+  {
+    title: "Dispositivos utilizados diariamente",
+    keywords: [
+      "utilizas diariamente"
+    ]
+  },
+
   {
     title: "Frecuencia de cambio de celular",
-    keywords: ["cada cuánto tiempo"],
+    keywords: [
+      "cada cuanto tiempo cambias"
+    ]
   },
+
   {
     title: "Aparatos desechados en dos años",
-    keywords: ["desechado", "dos años"],
+    keywords: [
+      "desechado",
+      "ultimos dos anos"
+    ]
   },
+
   {
     title: "Tipo de aparato que más acumulan",
-    keywords: ["tipo de aparato acumulas"],
+    keywords: [
+      "acumulas con mayor frecuencia"
+    ]
   },
+
+  {
+    title: "Conocimiento del daño ambiental",
+    keywords: [
+      "danos puede causar"
+    ]
+  },
+
+  {
+    title: "Conocimiento de centros de reciclaje",
+    keywords: [
+      "donde reciclar"
+    ]
+  },
+
+  {
+    title: "Conocimiento del término e-waste",
+    keywords: [
+      "residuos electronicos"
+    ]
+  },
+
+  {
+    title: "Conocimiento de metales pesados",
+    keywords: [
+      "metales pesados"
+    ]
+  },
+
   {
     title: "Información sobre reciclaje en la escuela",
-    keywords: ["información", "escuela"],
+    keywords: [
+      "reciclaje electronico en la escuela"
+    ]
   },
+
+  {
+    title: "Razón para no reciclar",
+    keywords: [
+      "principal razon"
+    ]
+  },
+
+  {
+    title: "Participación previa",
+    keywords: [
+      "participado anteriormente"
+    ]
+  },
+
+  {
+    title: "Participación en campaña escolar",
+    keywords: [
+      "escuela organizara"
+    ]
+  },
+
   {
     title: "Motivación para participar",
-    keywords: ["motivaría", "campaña"],
+    keywords: [
+      "motivaria mas"
+    ],
     labels: {
-      "Participación de amigos o familiares": "Participación familiar o amistades",
-    },
+      "Participación de amigos o familiares":
+        "Participación familiar o amistades"
+    }
   },
+
+  {
+    title: "Campañas permanentes",
+    keywords: [
+      "campanas permanentes"
+    ]
+  }
 ];
 
 if (menuToggle && navLinks) {
@@ -409,35 +500,64 @@ function findSurveyValues(rows) {
   return bestColumn.answers;
 }
 
+function normalizeText(text = "") {
+  return text
+    .toString()
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "") // quitar acentos
+    .replace(/[¿?¡!.,;:()"']/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
 function findHeaderIndex(headers, keywords) {
+  const normalizedKeywords = keywords.map(normalizeText);
+
   return headers.findIndex((header) => {
-    const normalizedHeader = header.toLowerCase();
-    return keywords.every((keyword) => normalizedHeader.includes(keyword));
+    const normalizedHeader = normalizeText(header);
+
+    return normalizedKeywords.some((keyword) =>
+      normalizedHeader.includes(keyword)
+    );
   });
 }
 
 function countColumnValues(rows, keywords, options = {}) {
   const headers = rows[0] || [];
   const index = findHeaderIndex(headers, keywords);
-  const counts = new Map();
 
   if (index === -1) {
+    console.warn("No encontrada:", keywords);
     return [];
   }
 
+  const counts = new Map();
+
   rows.slice(1).forEach((row) => {
     const rawValue = (row[index] || "").trim();
+
+    if (!rawValue) return;
+
     const values = options.split
-      ? rawValue.split(",").map((value) => value.trim()).filter(Boolean)
+      ? rawValue
+        .split(",")
+        .map(v => v.trim())
+        .filter(Boolean)
       : [rawValue];
 
     values.forEach((value) => {
-      const label = options.labels?.[value] || value;
+      const label =
+        options.labels?.[value] ||
+        options.labels?.[normalizeText(value)] ||
+        value;
+
       counts.set(label, (counts.get(label) || 0) + 1);
     });
   });
 
-  return [...counts.entries()].sort((first, second) => second[1] - first[1]);
+  return [...counts.entries()]
+    .sort((a, b) => b[1] - a[1]);
 }
 
 function getSurveyDistributions(rows) {
